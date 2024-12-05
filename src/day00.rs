@@ -1,11 +1,6 @@
-use actix_web::{
-    get,
-    http::StatusCode,
-    web::{Redirect, ServiceConfig},
-    Responder,
-};
+use actix_web::{get, http::StatusCode, web, Responder};
 
-pub fn configure(cfg: &mut ServiceConfig) {
+pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(get_hello_bird).service(get_seek);
 }
 
@@ -16,5 +11,6 @@ async fn get_hello_bird() -> impl Responder {
 
 #[get("/-1/seek")]
 async fn get_seek() -> impl Responder {
-    Redirect::to("https://www.youtube.com/watch?v=9Gc4QTqslN4").using_status_code(StatusCode::FOUND)
+    web::Redirect::to("https://www.youtube.com/watch?v=9Gc4QTqslN4")
+        .using_status_code(StatusCode::FOUND)
 }

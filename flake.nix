@@ -34,14 +34,14 @@
 
         cch24-validator = pkgs.rustPlatform.buildRustPackage rec {
           pname = "cch24-validator";
-          version = "2.0.1";
+          version = "5.0.0";
 
           src = pkgs.fetchCrate {
             inherit pname version;
-            hash = "sha256-AdKFVGvRe3xG3bzaaAJ95NSWjJ4oCgmB8Y7UcaDVOiM=";
+            hash = "sha256-Gk+DN80nnFrbwLFDw+VHir2YjSOr6KaINCYezjymfTs=";
           };
 
-          cargoHash = "sha256-1BaR4Rc62INH9rP4y1D2O15cyT7H1D1amXK4hKC8xmk=";
+          cargoHash = "sha256-gLeK2flONRK2iHnIfbGRKcqqEpWkkQUxYwBHv+85hS0=";
         };
       in {
         devShells.default = with pkgs;

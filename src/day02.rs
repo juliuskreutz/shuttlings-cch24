@@ -1,12 +1,8 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
 
-use actix_web::{
-    get,
-    web::{self, ServiceConfig},
-    Responder,
-};
+use actix_web::{get, web, Responder};
 
-pub fn configure(cfg: &mut ServiceConfig) {
+pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(get_dest)
         .service(get_key)
         .service(get_v6_dest)

@@ -1,13 +1,18 @@
 mod day00;
 mod day02;
+mod day05;
 
-use actix_web::web::ServiceConfig;
+use actix_web::web;
 use shuttle_actix_web::ShuttleActixWeb;
 
+type ShuttleResult<T> = Result<T, Box<dyn std::error::Error>>;
+
 #[shuttle_runtime::main]
-async fn main() -> ShuttleActixWeb<impl FnOnce(&mut ServiceConfig) + Send + Clone + 'static> {
-    let config = move |cfg: &mut ServiceConfig| {
-        cfg.configure(day00::configure).configure(day02::configure);
+async fn main() -> ShuttleActixWeb<impl FnOnce(&mut web::ServiceConfig) + Send + Clone + 'static> {
+    let config = move |cfg: &mut web::ServiceConfig| {
+        cfg.configure(day00::configure)
+            .configure(day02::configure)
+            .configure(day05::configure);
     };
 
     Ok(config.into())
