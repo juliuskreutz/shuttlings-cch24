@@ -6,8 +6,6 @@ use actix_web::{
     Responder,
 };
 
-use crate::ShuttleResult;
-
 pub fn configure(cfg: &mut ServiceConfig) {
     cfg.service(get_dest)
         .service(get_key)
@@ -17,20 +15,32 @@ pub fn configure(cfg: &mut ServiceConfig) {
 
 #[derive(serde::Deserialize)]
 struct DestInfo {
-    from: String,
-    key: String,
+    from: Ipv4Addr,
+    key: Ipv4Addr,
+}
+
+#[derive(serde::Deserialize)]
+struct DestInfoV6 {
+    from: Ipv6Addr,
+    key: Ipv6Addr,
 }
 
 #[derive(serde::Deserialize)]
 struct KeyInfo {
-    from: String,
-    to: String,
+    from: Ipv4Addr,
+    to: Ipv4Addr,
+}
+
+#[derive(serde::Deserialize)]
+struct KeyInfoV6 {
+    from: Ipv6Addr,
+    to: Ipv6Addr,
 }
 
 #[get("/2/dest")]
-async fn get_dest(info: web::Query<DestInfo>) -> ShuttleResult<impl Responder> {
-    let from: Ipv4Addr = info.from.parse()?;
-    let key: Ipv4Addr = info.key.parse()?;
+async fn get_dest(info: web::Query<DestInfo>) -> impl Responder {
+    let from: Ipv4Addr = info.from;
+    let key: Ipv4Addr = info.key;
 
     let mut octets = [0; 4];
 
@@ -40,13 +50,13 @@ async fn get_dest(info: web::Query<DestInfo>) -> ShuttleResult<impl Responder> {
 
     let dest = Ipv4Addr::from(octets);
 
-    Ok(dest.to_string())
+    dest.to_string()
 }
 
 #[get("/2/key")]
-async fn get_key(info: web::Query<KeyInfo>) -> ShuttleResult<impl Responder> {
-    let from: Ipv4Addr = info.from.parse()?;
-    let to: Ipv4Addr = info.to.parse()?;
+async fn get_key(info: web::Query<KeyInfo>) -> impl Responder {
+    let from: Ipv4Addr = info.from;
+    let to: Ipv4Addr = info.to;
 
     let mut octets = [0; 4];
 
@@ -56,13 +66,13 @@ async fn get_key(info: web::Query<KeyInfo>) -> ShuttleResult<impl Responder> {
 
     let key = Ipv4Addr::from(octets);
 
-    Ok(key.to_string())
+    key.to_string()
 }
 
 #[get("/2/v6/dest")]
-async fn get_v6_dest(info: web::Query<DestInfo>) -> ShuttleResult<impl Responder> {
-    let from: Ipv6Addr = info.from.parse()?;
-    let key: Ipv6Addr = info.key.parse()?;
+async fn get_v6_dest(info: web::Query<DestInfoV6>) -> impl Responder {
+    let from: Ipv6Addr = info.from;
+    let key: Ipv6Addr = info.key;
 
     let mut segments = [0; 8];
 
@@ -72,13 +82,13 @@ async fn get_v6_dest(info: web::Query<DestInfo>) -> ShuttleResult<impl Responder
 
     let dest = Ipv6Addr::from(segments);
 
-    Ok(dest.to_string())
+    dest.to_string()
 }
 
 #[get("/2/v6/key")]
-async fn get_v6_key(info: web::Query<KeyInfo>) -> ShuttleResult<impl Responder> {
-    let from: Ipv6Addr = info.from.parse()?;
-    let to: Ipv6Addr = info.to.parse()?;
+async fn get_v6_key(info: web::Query<KeyInfoV6>) -> impl Responder {
+    let from: Ipv6Addr = info.from;
+    let to: Ipv6Addr = info.to;
 
     let mut segments = [0; 8];
 
@@ -88,5 +98,5 @@ async fn get_v6_key(info: web::Query<KeyInfo>) -> ShuttleResult<impl Responder> 
 
     let dest = Ipv6Addr::from(segments);
 
-    Ok(dest.to_string())
+    dest.to_string()
 }
