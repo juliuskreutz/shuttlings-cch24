@@ -5,8 +5,6 @@ mod day05;
 use actix_web::web;
 use shuttle_actix_web::ShuttleActixWeb;
 
-type ShuttleResult<T> = Result<T, Box<dyn std::error::Error>>;
-
 #[shuttle_runtime::main]
 async fn main() -> ShuttleActixWeb<impl FnOnce(&mut web::ServiceConfig) + Send + Clone + 'static> {
     let config = move |cfg: &mut web::ServiceConfig| {

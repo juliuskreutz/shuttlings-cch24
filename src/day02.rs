@@ -1,6 +1,6 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
 
-use actix_web::{get, web, Responder};
+use actix_web::{get, web};
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(get_dest)
@@ -15,26 +15,8 @@ struct DestInfo {
     key: Ipv4Addr,
 }
 
-#[derive(serde::Deserialize)]
-struct DestInfoV6 {
-    from: Ipv6Addr,
-    key: Ipv6Addr,
-}
-
-#[derive(serde::Deserialize)]
-struct KeyInfo {
-    from: Ipv4Addr,
-    to: Ipv4Addr,
-}
-
-#[derive(serde::Deserialize)]
-struct KeyInfoV6 {
-    from: Ipv6Addr,
-    to: Ipv6Addr,
-}
-
 #[get("/2/dest")]
-async fn get_dest(info: web::Query<DestInfo>) -> impl Responder {
+async fn get_dest(info: web::Query<DestInfo>) -> String {
     let from: Ipv4Addr = info.from;
     let key: Ipv4Addr = info.key;
 
@@ -49,8 +31,14 @@ async fn get_dest(info: web::Query<DestInfo>) -> impl Responder {
     dest.to_string()
 }
 
+#[derive(serde::Deserialize)]
+struct KeyInfo {
+    from: Ipv4Addr,
+    to: Ipv4Addr,
+}
+
 #[get("/2/key")]
-async fn get_key(info: web::Query<KeyInfo>) -> impl Responder {
+async fn get_key(info: web::Query<KeyInfo>) -> String {
     let from: Ipv4Addr = info.from;
     let to: Ipv4Addr = info.to;
 
@@ -65,8 +53,14 @@ async fn get_key(info: web::Query<KeyInfo>) -> impl Responder {
     key.to_string()
 }
 
+#[derive(serde::Deserialize)]
+struct DestInfoV6 {
+    from: Ipv6Addr,
+    key: Ipv6Addr,
+}
+
 #[get("/2/v6/dest")]
-async fn get_v6_dest(info: web::Query<DestInfoV6>) -> impl Responder {
+async fn get_v6_dest(info: web::Query<DestInfoV6>) -> String {
     let from: Ipv6Addr = info.from;
     let key: Ipv6Addr = info.key;
 
@@ -81,8 +75,14 @@ async fn get_v6_dest(info: web::Query<DestInfoV6>) -> impl Responder {
     dest.to_string()
 }
 
+#[derive(serde::Deserialize)]
+struct KeyInfoV6 {
+    from: Ipv6Addr,
+    to: Ipv6Addr,
+}
+
 #[get("/2/v6/key")]
-async fn get_v6_key(info: web::Query<KeyInfoV6>) -> impl Responder {
+async fn get_v6_key(info: web::Query<KeyInfoV6>) -> String {
     let from: Ipv6Addr = info.from;
     let to: Ipv6Addr = info.to;
 

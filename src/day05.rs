@@ -1,6 +1,4 @@
-use actix_web::{http, post, web, HttpRequest, HttpResponse, Responder};
-
-use crate::ShuttleResult;
+use actix_web::{http, post, web, HttpRequest, HttpResponse};
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(post_manifest);
@@ -22,24 +20,23 @@ struct Order {
 }
 
 #[post("/5/manifest")]
-async fn post_manifest(req: HttpRequest, text: String) -> ShuttleResult<impl Responder> {
-    let Some(content_type) = req.headers().get(http::header::CONTENT_TYPE) else {
-        return Ok(HttpResponse::UnsupportedMediaType().finish());
-    };
+async fn post_manifest(req: HttpRequest, text: String) -> HttpResponse {
+    let content_type = req.headers().get(http::header::CONTENT_TYPE);
 
-    let Some(manifest) = (match content_type.to_str()? {
-        "application/toml" => toml::from_str::<cargo_manifest::Manifest<Metadata>>(&text).ok(),
-        "application/json" => {
+    let Some(package) = (match content_type.map(|c| c.to_str()) {
+        Some(Ok("application/toml")) => {
+            toml::from_str::<cargo_manifest::Manifest<Metadata>>(&text).ok()
+        }
+        Some(Ok("application/json")) => {
             serde_json::from_str::<cargo_manifest::Manifest<Metadata>>(&text).ok()
         }
-        "application/yaml" => serde_yml::from_str::<cargo_manifest::Manifest<Metadata>>(&text).ok(),
-        _ => return Ok(HttpResponse::UnsupportedMediaType().finish()),
-    }) else {
-        return Ok(HttpResponse::BadRequest().body("Invalid manifest"));
-    };
-
-    let Some(package) = manifest.package else {
-        return Ok(HttpResponse::BadRequest().body("Magic keyword not provided"));
+        Some(Ok("application/yaml")) => {
+            serde_yml::from_str::<cargo_manifest::Manifest<Metadata>>(&text).ok()
+        }
+        _ => return HttpResponse::UnsupportedMediaType().finish(),
+    })
+    .and_then(|m| m.package) else {
+        return HttpResponse::BadRequest().body("Invalid manifest");
     };
 
     if !package
@@ -48,7 +45,7 @@ async fn post_manifest(req: HttpRequest, text: String) -> ShuttleResult<impl Res
         .map(|k| k.contains(&"Christmas 2024".to_string()))
         .unwrap_or_default()
     {
-        return Ok(HttpResponse::BadRequest().body("Magic keyword not provided"));
+        return HttpResponse::BadRequest().body("Magic keyword not provided");
     }
 
     let Some(orders) = package.metadata.map(|m| {
@@ -58,12 +55,12 @@ async fn post_manifest(req: HttpRequest, text: String) -> ShuttleResult<impl Res
             .map(|o| format!("{}: {}", o.item, o.quantity.unwrap()))
             .collect::<Vec<_>>()
     }) else {
-        return Ok(HttpResponse::NoContent().finish());
+        return HttpResponse::NoContent().finish();
     };
 
     if orders.is_empty() {
-        return Ok(HttpResponse::NoContent().finish());
+        return HttpResponse::NoContent().finish();
     }
 
-    Ok(HttpResponse::Ok().body(orders.join("\n")))
+    HttpResponse::Ok().body(orders.join("\n"))
 }
