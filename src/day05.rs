@@ -1,24 +1,9 @@
-use std::collections::HashSet;
-
 use actix_web::{http, post, web, HttpRequest, HttpResponse, Responder};
 
 use crate::ShuttleResult;
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(post_manifest);
-}
-
-#[derive(serde::Deserialize)]
-struct Toml {
-    package: Package,
-}
-
-#[derive(serde::Deserialize)]
-struct Package {
-    #[serde(default)]
-    metadata: Metadata,
-    #[serde(default)]
-    keywords: HashSet<String>,
 }
 
 #[derive(Default, serde::Deserialize)]
@@ -42,48 +27,43 @@ async fn post_manifest(req: HttpRequest, text: String) -> ShuttleResult<impl Res
         return Ok(HttpResponse::UnsupportedMediaType().finish());
     };
 
-    let content_type = content_type.to_str()?;
-
-    if !matches!(
-        content_type,
-        "application/toml" | "application/json" | "application/yaml"
-    ) {
-        return Ok(HttpResponse::UnsupportedMediaType().finish());
-    }
-
-    if match content_type {
-        "application/toml" => toml::from_str::<cargo_manifest::Manifest>(&text).is_err(),
-        "application/json" => serde_json::from_str::<cargo_manifest::Manifest>(&text).is_err(),
-        "application/yaml" => serde_yml::from_str::<cargo_manifest::Manifest>(&text).is_err(),
-        _ => unreachable!(),
-    } {
+    let Some(manifest) = (match content_type.to_str()? {
+        "application/toml" => toml::from_str::<cargo_manifest::Manifest<Metadata>>(&text).ok(),
+        "application/json" => {
+            serde_json::from_str::<cargo_manifest::Manifest<Metadata>>(&text).ok()
+        }
+        "application/yaml" => serde_yml::from_str::<cargo_manifest::Manifest<Metadata>>(&text).ok(),
+        _ => return Ok(HttpResponse::UnsupportedMediaType().finish()),
+    }) else {
         return Ok(HttpResponse::BadRequest().body("Invalid manifest"));
-    }
-
-    let toml: Toml = match content_type {
-        "application/toml" => toml::from_str(&text)?,
-        "application/json" => serde_json::from_str(&text)?,
-        "application/yaml" => serde_yml::from_str(&text)?,
-        _ => unreachable!(),
     };
 
-    if !toml.package.keywords.contains("Christmas 2024") {
+    let Some(package) = manifest.package else {
+        return Ok(HttpResponse::BadRequest().body("Magic keyword not provided"));
+    };
+
+    if !package
+        .keywords
+        .and_then(|k| k.as_local())
+        .map(|k| k.contains(&"Christmas 2024".to_string()))
+        .unwrap_or_default()
+    {
         return Ok(HttpResponse::BadRequest().body("Magic keyword not provided"));
     }
 
-    let body = toml
-        .package
-        .metadata
-        .orders
-        .into_iter()
-        .filter(|o| o.quantity.is_some())
-        .map(|o| format!("{}: {}", o.item, o.quantity.unwrap()))
-        .collect::<Vec<_>>()
-        .join("\n");
+    let Some(orders) = package.metadata.map(|m| {
+        m.orders
+            .into_iter()
+            .filter(|o| o.quantity.is_some())
+            .map(|o| format!("{}: {}", o.item, o.quantity.unwrap()))
+            .collect::<Vec<_>>()
+    }) else {
+        return Ok(HttpResponse::NoContent().finish());
+    };
 
-    if body.is_empty() {
+    if orders.is_empty() {
         return Ok(HttpResponse::NoContent().finish());
     }
 
-    Ok(HttpResponse::Ok().body(body))
+    Ok(HttpResponse::Ok().body(orders.join("\n")))
 }
