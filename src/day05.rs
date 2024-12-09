@@ -4,7 +4,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(post_manifest);
 }
 
-#[derive(Default, serde::Deserialize)]
+#[derive(serde::Deserialize)]
 struct Metadata {
     #[serde(default)]
     orders: Vec<Order>,

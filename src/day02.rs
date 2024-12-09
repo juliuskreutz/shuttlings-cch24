@@ -16,19 +16,14 @@ struct DestInfo {
 }
 
 #[get("/2/dest")]
-async fn get_dest(info: web::Query<DestInfo>) -> String {
-    let from: Ipv4Addr = info.from;
-    let key: Ipv4Addr = info.key;
-
+async fn get_dest(web::Query(DestInfo { from, key }): web::Query<DestInfo>) -> String {
     let mut octets = [0; 4];
 
     for (i, o) in octets.iter_mut().enumerate() {
-        *o = from.octets()[i].overflowing_add(key.octets()[i]).0;
+        *o = from.octets()[i].wrapping_add(key.octets()[i]);
     }
 
-    let dest = Ipv4Addr::from(octets);
-
-    dest.to_string()
+    Ipv4Addr::from(octets).to_string()
 }
 
 #[derive(serde::Deserialize)]
@@ -38,19 +33,14 @@ struct KeyInfo {
 }
 
 #[get("/2/key")]
-async fn get_key(info: web::Query<KeyInfo>) -> String {
-    let from: Ipv4Addr = info.from;
-    let to: Ipv4Addr = info.to;
-
+async fn get_key(web::Query(KeyInfo { from, to }): web::Query<KeyInfo>) -> String {
     let mut octets = [0; 4];
 
     for (i, o) in octets.iter_mut().enumerate() {
-        *o = to.octets()[i].overflowing_sub(from.octets()[i]).0;
+        *o = to.octets()[i].wrapping_sub(from.octets()[i]);
     }
 
-    let key = Ipv4Addr::from(octets);
-
-    key.to_string()
+    Ipv4Addr::from(octets).to_string()
 }
 
 #[derive(serde::Deserialize)]
@@ -60,19 +50,14 @@ struct DestInfoV6 {
 }
 
 #[get("/2/v6/dest")]
-async fn get_v6_dest(info: web::Query<DestInfoV6>) -> String {
-    let from: Ipv6Addr = info.from;
-    let key: Ipv6Addr = info.key;
-
+async fn get_v6_dest(web::Query(DestInfoV6 { from, key }): web::Query<DestInfoV6>) -> String {
     let mut segments = [0; 8];
 
     for (i, o) in segments.iter_mut().enumerate() {
         *o = from.segments()[i] ^ key.segments()[i];
     }
 
-    let dest = Ipv6Addr::from(segments);
-
-    dest.to_string()
+    Ipv6Addr::from(segments).to_string()
 }
 
 #[derive(serde::Deserialize)]
@@ -82,17 +67,12 @@ struct KeyInfoV6 {
 }
 
 #[get("/2/v6/key")]
-async fn get_v6_key(info: web::Query<KeyInfoV6>) -> String {
-    let from: Ipv6Addr = info.from;
-    let to: Ipv6Addr = info.to;
-
+async fn get_v6_key(web::Query(KeyInfoV6 { from, to }): web::Query<KeyInfoV6>) -> String {
     let mut segments = [0; 8];
 
     for (i, o) in segments.iter_mut().enumerate() {
         *o = to.segments()[i] ^ from.segments()[i];
     }
 
-    let dest = Ipv6Addr::from(segments);
-
-    dest.to_string()
+    Ipv6Addr::from(segments).to_string()
 }
