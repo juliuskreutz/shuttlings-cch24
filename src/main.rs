@@ -1,6 +1,7 @@
 mod day00;
 mod day02;
 mod day05;
+mod day09;
 
 use actix_web::web;
 use shuttle_actix_web::ShuttleActixWeb;
@@ -10,7 +11,8 @@ async fn main() -> ShuttleActixWeb<impl FnOnce(&mut web::ServiceConfig) + Send +
     let config = move |cfg: &mut web::ServiceConfig| {
         cfg.configure(day00::configure)
             .configure(day02::configure)
-            .configure(day05::configure);
+            .configure(day05::configure)
+            .configure(day09::configure);
     };
 
     Ok(config.into())
