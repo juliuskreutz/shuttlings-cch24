@@ -58,49 +58,36 @@ async fn post_milk(
     } else if !json {
         HttpResponse::Ok().body("Milk withdrawn\n")
     } else {
-        match body.map(|j| j.into_inner()) {
-            Some(Body {
-                liters: Some(liters),
-                gallons: None,
-                litres: None,
-                pints: None,
-            }) => {
+        match body.map(
+            |web::Json(Body {
+                 liters,
+                 gallons,
+                 litres,
+                 pints,
+             })| (liters, gallons, litres, pints),
+        ) {
+            Some((Some(liters), None, None, None)) => {
                 let gallons = liters / 3.785_411_8;
 
                 let v = serde_json::json!({"gallons": gallons});
 
                 HttpResponse::Ok().json(v)
             }
-            Some(Body {
-                liters: None,
-                gallons: Some(gallons),
-                litres: None,
-                pints: None,
-            }) => {
+            Some((None, Some(gallons), None, None)) => {
                 let liters = gallons * 3.785_411_8;
 
                 let v = serde_json::json!({"liters": liters});
 
                 HttpResponse::Ok().json(v)
             }
-            Some(Body {
-                liters: None,
-                gallons: None,
-                litres: Some(litres),
-                pints: None,
-            }) => {
+            Some((None, None, Some(litres), None)) => {
                 let pints = litres * 1.759_754;
 
                 let v = serde_json::json!({"pints": pints});
 
                 HttpResponse::Ok().json(v)
             }
-            Some(Body {
-                liters: None,
-                gallons: None,
-                litres: None,
-                pints: Some(pints),
-            }) => {
+            Some((None, None, None, Some(pints))) => {
                 let litres = pints / 1.759_754;
 
                 let v = serde_json::json!({"litres": litres});
