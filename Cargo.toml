@@ -6,7 +6,6 @@ edition = "2021"
 [dependencies]
 actix-web = "4.9.0"
 cargo-manifest = "0.17.0"
-lazy_static = "1.5.0"
 leaky-bucket = "1.1.2"
 mime = "0.3.17"
 rand = "0.8.5"

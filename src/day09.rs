@@ -1,11 +1,9 @@
-use std::time::Duration;
+use std::{sync::LazyLock, time::Duration};
 
 use actix_web::{http, post, web, HttpRequest, HttpResponse};
 use shuttle_runtime::tokio::sync::Mutex;
 
-lazy_static::lazy_static!(
-    static ref STATE: web::Data<State> = web::Data::default();
-);
+static STATE: LazyLock<web::Data<State>> = LazyLock::new(Default::default);
 
 struct State {
     rate_limiter: Mutex<leaky_bucket::RateLimiter>,
@@ -27,9 +25,9 @@ impl Default for State {
 }
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
-    cfg.service(post_milk)
-        .service(post_refill)
-        .app_data(STATE.clone());
+    let state = STATE.clone();
+
+    cfg.service(post_milk).service(post_refill).app_data(state);
 }
 
 #[derive(serde::Deserialize)]

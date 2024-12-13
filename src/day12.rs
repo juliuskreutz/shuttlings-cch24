@@ -1,10 +1,10 @@
+use std::sync::LazyLock;
+
 use actix_web::{get, post, web, HttpResponse};
 use rand::{Rng, SeedableRng};
 use shuttle_runtime::tokio::sync::Mutex;
 
-lazy_static::lazy_static!(
-    static ref STATE: web::Data<State> = web::Data::default();
-);
+static STATE: LazyLock<web::Data<State>> = LazyLock::new(Default::default);
 
 #[derive(Default, Clone, Copy, PartialEq, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -150,11 +150,13 @@ impl RandomBoard {
 }
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
+    let state = STATE.clone();
+
     cfg.service(get_board)
         .service(post_reset)
         .service(post_place)
         .service(get_random_board)
-        .app_data(STATE.clone());
+        .app_data(state);
 }
 
 #[get("/12/board")]
