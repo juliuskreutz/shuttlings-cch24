@@ -36,14 +36,14 @@
 
         cch24-validator = pkgs.rustPlatform.buildRustPackage rec {
           pname = "cch24-validator";
-          version = "16.0.0";
+          version = "19.0.0";
 
           src = pkgs.fetchCrate {
             inherit pname version;
-            hash = "sha256-xsq7oeMBvCSqcXUfEtcUeElHS0gI4jaw9fD6oKfujxI=";
+            hash = "sha256-61pQ8NFOzXhz1MBx/SBlEk6OgtwA5QAU1G4rwqvHpws=";
           };
 
-          cargoHash = "sha256-H5BOIoLUoBuqS96NqJYTDcOGiIsoWN10M53vYN2q9vs=";
+          cargoHash = "sha256-+2Jvrm5O8qtDNtnEwwXsDONnqPbAjhtC3DqaValoZ3o=";
         };
       in
       {
@@ -55,6 +55,7 @@
               rust-analyzer
               taplo
               cargo-watch
+              sqlx-cli
               shuttle
               cch24-validator
             ];
