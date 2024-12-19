@@ -13,6 +13,8 @@ use shuttle_actix_web::ShuttleActixWeb;
 async fn main(
     #[shuttle_shared_db::Postgres] pool: sqlx::PgPool,
 ) -> ShuttleActixWeb<impl FnOnce(&mut web::ServiceConfig) + Send + Clone + 'static> {
+    sqlx::migrate!().run(&pool).await.unwrap();
+
     let config = move |cfg: &mut web::ServiceConfig| {
         cfg.configure(day00::configure)
             .configure(day02::configure)

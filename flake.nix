@@ -56,6 +56,7 @@
               taplo
               cargo-watch
               sqlx-cli
+              pgformatter
               shuttle
               cch24-validator
             ];

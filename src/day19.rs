@@ -34,22 +34,10 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
 
 #[post("/19/reset")]
 async fn post_reset(pool: web::Data<sqlx::PgPool>) -> HttpResponse {
-    let _ = sqlx::query("DROP TABLE quotes")
+    sqlx::query!("TRUNCATE quotes")
         .execute(pool.as_ref())
-        .await;
-
-    sqlx::query!(
-        "CREATE TABLE IF NOT EXISTS quotes (
-            id UUID PRIMARY KEY,
-            author TEXT NOT NULL,
-            quote TEXT NOT NULL,
-            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            version INT NOT NULL DEFAULT 1
-        );"
-    )
-    .execute(pool.as_ref())
-    .await
-    .unwrap();
+        .await
+        .unwrap();
 
     HttpResponse::Ok().finish()
 }
