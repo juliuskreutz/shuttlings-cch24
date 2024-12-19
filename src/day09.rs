@@ -30,19 +30,43 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(post_milk).service(post_refill).app_data(state);
 }
 
-#[derive(serde::Deserialize)]
-struct Body {
-    liters: Option<f32>,
-    gallons: Option<f32>,
-    litres: Option<f32>,
-    pints: Option<f32>,
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum Unit {
+    Liters(f32),
+    Gallons(f32),
+    Litres(f32),
+    Pints(f32),
+}
+
+impl Unit {
+    fn convert(self) -> Unit {
+        match self {
+            Unit::Liters(liters) => {
+                let gallons = liters / 3.785_411_8;
+                Unit::Gallons(gallons)
+            }
+            Unit::Gallons(gallons) => {
+                let liters = gallons * 3.785_411_8;
+                Unit::Liters(liters)
+            }
+            Unit::Litres(litres) => {
+                let pints = litres * 1.759_754;
+                Unit::Pints(pints)
+            }
+            Unit::Pints(pints) => {
+                let litres = pints / 1.759_754;
+                Unit::Litres(litres)
+            }
+        }
+    }
 }
 
 #[post("/9/milk")]
 async fn post_milk(
     req: HttpRequest,
     state: web::Data<State>,
-    body: Option<web::Json<Body>>,
+    unit: Option<web::Json<Unit>>,
 ) -> HttpResponse {
     let content_type = req.headers().get(http::header::CONTENT_TYPE);
 
@@ -56,41 +80,11 @@ async fn post_milk(
     } else if !json {
         HttpResponse::Ok().body("Milk withdrawn\n")
     } else {
-        match body.map(
-            |web::Json(Body {
-                 liters,
-                 gallons,
-                 litres,
-                 pints,
-             })| (liters, gallons, litres, pints),
-        ) {
-            Some((Some(liters), None, None, None)) => {
-                let gallons = liters / 3.785_411_8;
+        match unit.map(|j| j.into_inner()) {
+            Some(unit) => {
+                let unit = unit.convert();
 
-                let v = serde_json::json!({"gallons": gallons});
-
-                HttpResponse::Ok().json(v)
-            }
-            Some((None, Some(gallons), None, None)) => {
-                let liters = gallons * 3.785_411_8;
-
-                let v = serde_json::json!({"liters": liters});
-
-                HttpResponse::Ok().json(v)
-            }
-            Some((None, None, Some(litres), None)) => {
-                let pints = litres * 1.759_754;
-
-                let v = serde_json::json!({"pints": pints});
-
-                HttpResponse::Ok().json(v)
-            }
-            Some((None, None, None, Some(pints))) => {
-                let litres = pints / 1.759_754;
-
-                let v = serde_json::json!({"litres": litres});
-
-                HttpResponse::Ok().json(v)
+                HttpResponse::Ok().json(unit)
             }
             _ => HttpResponse::BadRequest().finish(),
         }
